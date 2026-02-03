@@ -7,60 +7,105 @@ class CustomSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color navyOxigen = const Color(0xFF0D1B3E);
+    // Variabel Warna berdasarkan Logo Oxigen
+    final Color navyOxigen = const Color(0xFF0D1B3E); 
+    final Color blueOxigen = const Color(0xFF2E5BFF);
 
     return Drawer(
       child: Column(
         children: [
-          // Header Sidebar
+          // HEADER SIDEBAR: Menampilkan profil user
           UserAccountsDrawerHeader(
             decoration: BoxDecoration(color: navyOxigen),
             currentAccountPicture: const CircleAvatar(
               backgroundColor: Colors.white,
-              child: Icon(Icons.person, color: Color(0xFF0D1B3E)),
+              child: Icon(Icons.person, color: Color(0xFF0D1B3E), size: 40),
             ),
-            accountName: Text(role == 'ketua' ? "Ketua Divisi" : "Staff Humaniora"),
+            // --- INTEGRASI FIREBASE ---
+            // Nantinya accountName dan accountEmail bisa diambil dari FirebaseAuth.instance.currentUser
+            accountName: Text(
+              role == 'ketua' ? "Ketua Divisi" : "Staff Humaniora",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             accountEmail: const Text("internal@oxigen.id"),
           ),
 
-          // Menu yang sama untuk semua role
-          _buildMenuItem(Icons.dashboard, "Dashboard", () {}),
+          // MENU UTAMA: Dashboard (Dinamis berdasarkan role)
+          _buildMenuItem(
+            Icons.dashboard_outlined, 
+            "Dashboard", 
+            () {
+              // Menggunakan pushReplacementNamed agar tidak menumpuk halaman dashboard
+              Navigator.pushReplacementNamed(
+                context, 
+                role == 'ketua' ? '/dashboard_ketua' : '/dashboard_staff'
+              );
+            },
+            blueOxigen,
+          ),
 
-          // Kondisi: Jika Staff, tampilkan menu spesifik staff
+          const Divider(thickness: 1, indent: 15, endIndent: 15),
+
+          // MENU KHUSUS STAFF
           if (role == 'staff') ...[
-            _buildMenuItem(Icons.school, "Data Mahasiswa", () {}),
-            _buildMenuItem(Icons.group, "Keanggotaan", () {}),
-            _buildMenuItem(Icons.assignment_turned_in, "Absensi", () {}),
+            _buildMenuItem(Icons.school_outlined, "Data Mahasiswa", () {
+              Navigator.pushNamed(context, '/data_mahasiswa');
+            }, blueOxigen),
+            _buildMenuItem(Icons.group_outlined, "Keanggotaan", () {
+              Navigator.pushNamed(context, '/keanggotaan');
+            }, blueOxigen),
+            _buildMenuItem(Icons.assignment_turned_in_outlined, "Absensi", () {
+              Navigator.pushNamed(context, '/absensi_staff');
+            }, blueOxigen),
           ],
 
-          // Kondisi: Jika Ketua, tambahkan menu Approval/Laporan (Contoh)
-          // Bagian di dalam Column di CustomSidebar
+          // MENU KHUSUS KETUA
           if (role == 'ketua') ...[
-           _buildMenuItem(Icons.how_to_reg, "Approval Absensi", () {
+            _buildMenuItem(Icons.how_to_reg_outlined, "Approval Absensi", () {
               Navigator.pushNamed(context, '/approval_absensi');
-            }),
-            _buildMenuItem(Icons.rule, "Approval Status", () {
+            }, blueOxigen),
+            _buildMenuItem(Icons.rule_outlined, "Approval Status", () {
               Navigator.pushNamed(context, '/approval_status');
-            }),
-            _buildMenuItem(Icons.calendar_month, "Periode", () {}),
-            _buildMenuItem(Icons.summarize, "Laporan", () {}),
+            }, blueOxigen),
+            _buildMenuItem(Icons.calendar_month_outlined, "Periode", () {
+              Navigator.pushNamed(context, '/kelola_periode');
+            }, blueOxigen),
+            _buildMenuItem(Icons.summarize_outlined, "Laporan", () {
+              Navigator.pushNamed(context, '/laporan');
+            }, blueOxigen),
           ],
 
-          const Spacer(),
+          const Spacer(), // Mendorong menu logout ke paling bawah
+          
           const Divider(),
-          _buildMenuItem(Icons.logout, "Keluar", () {
-            Navigator.pushReplacementNamed(context, '/');
-          }),
+          // TOMBOL KELUAR
+          _buildMenuItem(
+            Icons.logout_rounded, 
+            "Keluar", 
+            () {
+              // --- INTEGRASI FIREBASE ---
+              // Tambahkan: await FirebaseAuth.instance.signOut();
+              Navigator.pushReplacementNamed(context, '/');
+            }, 
+            Colors.redAccent,
+          ),
+          const SizedBox(height: 10),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
+  // HELPER WIDGET: Agar kode menu tidak berulang
+  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap, Color iconColor) {
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFF2E5BFF)),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      leading: Icon(icon, color: iconColor),
+      title: Text(
+        title, 
+        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+      ),
       onTap: onTap,
+      visualDensity: const VisualDensity(vertical: -1), // Membuat menu sedikit lebih rapat
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
 }
